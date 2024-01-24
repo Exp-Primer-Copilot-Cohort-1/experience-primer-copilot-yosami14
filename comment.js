@@ -1,40 +1,24 @@
-// Create web server and run it
-// npm install express
-// npm install body-parser
-// npm install cookie-parser
-// npm install multer
-// npm install express-session
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-// Create application/x-www-form-urlencoded parser
-var urlencodedParser = bodyParser.urlencoded({extended: false});
-app.use(express.static('public'));
-app.get('/index.html', function (req, res) {
-    res.sendFile(__dirname + '/' + 'index.html');
-})
-app.post('/process_post', urlencodedParser, function (req, res) {
-    // Prepare output in JSON format
-    response = {
-        first_name: req.body.first_name,
-        last_name: req.body.last_name
-    };
-    console.log(response);
-    res.end(JSON.stringify(response));
-})
-var server = app.listen(8081, function () {
-    var host = server.address().address
-    var port = server.address().port
-    console.log('Server running at http://%s:%s', host, port)
-})
-```
-In the console, it shows:
-```
-Server running at http://:::8081
-```
-I have checked my firewall and it seems that the port 8081 is open.
-I am not sure what is wrong. Thanks for the help!
+// Create web server
 
-OP 2019-01-21: I have found the answer to my question. I am using Ubuntu 18.04 and I need to add the IP address of my server to the listen function.
-```
-var server = app.listen(8081, '
+const http = require('http');
+const fs = require('fs');
+
+const server = http.createServer(function (req, res) {
+    console.log('request was made: ' + req.url);
+    if (req.url === '/home' || req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        fs.createReadStream(__dirname + '/index.html').pipe(res);
+    } else if (req.url === '/contact') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        fs.createReadStream(__dirname + '/contact.html').pipe(res);
+    } else if (req.url === '/api/ninjas') {
+        const ninjas = [{ name: 'ryu', age: 29 }, { name: 'yoshi', age: 32 }];
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(ninjas));
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/html' });
+        fs.createReadStream(__dirname + '/404.html').pipe(res);
+    }
+});
+
+server.listen(3000, '
